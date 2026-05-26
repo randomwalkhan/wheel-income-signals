@@ -6,6 +6,10 @@ Universe: SPY, QQQ, IWM, DIA, XLK, XLF, XLE, XLV, XLP, XLU, XLI, XLY, SMH, SOXX,
 
 Important: this is a Yahoo Finance proxy backtest. It uses real Yahoo ETF daily OHLCV data, but historical option chains are model-priced with Black-Scholes from historical volatility because Yahoo Finance does not provide complete historical option-chain quotes through the free chart endpoint.
 
+## Return Comparison
+
+![3-year Wheel vs buy-and-hold CAGR comparison](return_comparison.svg)
+
 ## Selected ETF
 
 The top proxy result is `SOXX`.
@@ -53,4 +57,3 @@ This is not the most conservative choice. For a more balanced result, `XLK` had 
 - `monthly_income.csv`: premium income by month
 - `equity_curve.csv`: account equity path
 - `summary.md`: generated text summary
-

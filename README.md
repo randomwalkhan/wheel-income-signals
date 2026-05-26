@@ -101,6 +101,12 @@ python3 wheel_income_signals.py backtest \
   --out-dir reports/yahoo_proxy_3y
 ```
 
+Latest generated Yahoo proxy report:
+
+- [3-year return comparison and ranking](reports/yahoo_proxy_3y/README.md)
+- [Summary metrics CSV](reports/yahoo_proxy_3y/summary.csv)
+- [Trade log CSV](reports/yahoo_proxy_3y/trades.csv)
+
 Run tests:
 
 ```bash

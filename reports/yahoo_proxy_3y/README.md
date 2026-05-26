@@ -10,6 +10,8 @@ Important: this is a Yahoo Finance proxy backtest. It uses real Yahoo ETF daily 
 
 ![3-year Wheel vs buy-and-hold CAGR comparison](return_comparison.svg)
 
+![3-year equity curve comparison](equity_curve_comparison.svg)
+
 ## Selected ETF
 
 The top proxy result is `SOXX`.

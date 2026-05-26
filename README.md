@@ -1,5 +1,41 @@
 # ETF Wheel Income Signals
 
+ETF-only Wheel strategy research for monthly option income: sell cash-secured puts first, take assignment only on ETFs worth holding, then sell covered calls above adjusted cost basis.
+
+This repository includes a signal script, a backtest engine, and a generated 3-year Yahoo Finance proxy report for comparing ETF candidates.
+
+## Strategy Snapshot
+
+![3-year Wheel vs buy-and-hold CAGR comparison](reports/yahoo_proxy_3y/return_comparison.svg)
+
+![3-year equity curve comparison](reports/yahoo_proxy_3y/equity_curve_comparison.svg)
+
+Model-based Yahoo proxy result, 2023-05-26 to 2026-05-22, $100,000 per ETF:
+
+| Rank | ETF | Wheel CAGR | Max Drawdown | End Equity | Assignment Rate | Buy-Hold CAGR |
+|---:|---|---:|---:|---:|---:|---:|
+| 1 | SOXX | 22.28% | -16.84% | $182,443.61 | 14.81% | 48.96% |
+| 2 | SMH | 17.16% | -16.26% | $160,546.19 | 14.29% | 57.80% |
+| 3 | **XLK** | **17.14%** | **-1.62%** | **$160,489.47** | **10.34%** | **29.97%** |
+| 4 | IWM | 14.66% | -12.99% | $150,512.89 | 18.52% | 17.48% |
+| 5 | XLY | 13.61% | -14.47% | $146,450.57 | 16.67% | 16.25% |
+| 6 | XLE | 12.55% | -12.40% | $142,393.17 | 13.04% | 14.79% |
+| 7 | QQQ | 11.39% | -9.94% | $138,048.26 | 19.23% | 27.34% |
+
+Current interpretation: `SOXX` has the highest modeled return, but `XLK` is the preferred balanced ETF because it reaches the 10% annualized target with much lower modeled drawdown than the semiconductor ETFs. The curve chart includes `SPY Buy&Hold` as the broad-market benchmark.
+
+Full generated report:
+
+- [Yahoo proxy 3-year report](reports/yahoo_proxy_3y/README.md)
+- [Summary metrics CSV](reports/yahoo_proxy_3y/summary.csv)
+- [Trade log CSV](reports/yahoo_proxy_3y/trades.csv)
+- [Monthly premium income CSV](reports/yahoo_proxy_3y/monthly_income.csv)
+- [Equity curve CSV](reports/yahoo_proxy_3y/equity_curve.csv)
+
+Important caveat: Yahoo Finance does not provide complete historical option-chain quotes through the free chart endpoint. The Yahoo report uses real ETF OHLCV data and model-priced option legs from historical volatility, so it is a proxy backtest, not an OPRA-quality historical option-chain backtest.
+
+## How It Works
+
 Research-grade Python tooling for an ETF-only Wheel strategy:
 
 1. Sell cash-secured puts at a value-conscious strike.

@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="820" viewBox="0 0 1500 820">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<style>text{font-family:Arial,Helvetica,sans-serif;fill:#17202a}.title{font-size:28px;font-weight:700}.sub{font-size:15px;fill:#52616b}.axis{font-size:13px;fill:#52616b}.legend{font-size:15px;font-weight:700}.note{font-size:12px;fill:#64748b}</style>
+<text class="title" x="100" y="43">3-Year Equity Curve: Wheel Candidates vs SPY Market Benchmark</text>
+<text class="sub" x="100" y="70">Yahoo proxy backtest, normalized to $100,000. SPY line is buy-and-hold market benchmark.</text>
+<line x1="100" y1="637.22" x2="1240" y2="637.22" stroke="#e5e7eb" stroke-width="1"/>
+<text class="axis" x="88" y="641.22" text-anchor="end">$100k</text>
+<line x1="100" y1="501.67" x2="1240" y2="501.67" stroke="#e5e7eb" stroke-width="1"/>
+<text class="axis" x="88" y="505.67" text-anchor="end">$120k</text>
+<line x1="100" y1="366.11" x2="1240" y2="366.11" stroke="#e5e7eb" stroke-width="1"/>
+<text class="axis" x="88" y="370.11" text-anchor="end">$140k</text>
+<line x1="100" y1="230.56" x2="1240" y2="230.56" stroke="#e5e7eb" stroke-width="1"/>
+<text class="axis" x="88" y="234.56" text-anchor="end">$160k</text>
+<line x1="100" y1="95.00" x2="1240" y2="95.00" stroke="#e5e7eb" stroke-width="1"/>
+<text class="axis" x="88" y="99.00" text-anchor="end">$180k</text>
+<line x1="330.51" y1="95" x2="330.51" y2="705" stroke="#f1f5f9" stroke-width="1"/>
+<text class="axis" x="330.51" y="733" text-anchor="middle">2024</text>
+<line x1="714.01" y1="95" x2="714.01" y2="705" stroke="#f1f5f9" stroke-width="1"/>
+<text class="axis" x="714.01" y="733" text-anchor="middle">2025</text>
+<line x1="1096.45" y1="95" x2="1096.45" y2="705" stroke="#f1f5f9" stroke-width="1"/>
+<text class="axis" x="1096.45" y="733" text-anchor="middle">2026</text>
+<line x1="100" y1="705" x2="1240" y2="705" stroke="#334155" stroke-width="1.5"/>
+<line x1="100" y1="95" x2="100" y2="705" stroke="#334155" stroke-width="1.5"/>
+<polyline points="100.00,637.22 132.48,628.22 161.82,617.68 191.16,596.59 220.50,598.73 249.83,586.74 279.17,567.31 308.51,529.50 337.85,520.70 367.19,511.57 396.53,501.29 425.86,488.61 455.20,473.38 485.59,421.37 521.21,406.81 550.55,415.72 579.89,403.39 609.23,391.32 638.57,354.18 667.90,382.06 697.24,319.14 726.58,338.49 755.92,317.28 785.26,387.63 814.60,485.30 858.60,393.54 887.94,362.68 917.28,331.84 946.62,311.21 975.96,298.02 1005.29,286.67 1034.63,276.08 1063.97,260.28 1093.31,243.48 1122.65,221.20 1151.99,205.28 1181.32,195.85 1210.66,127.12 1240.00,101.43" fill="none" stroke="#dc2626" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="1240.00" cy="101.43" r="4" fill="#dc2626"/>
+<polyline points="100.00,637.22 132.48,626.66 161.82,616.16 191.16,590.68 220.50,595.98 257.17,605.31 293.84,566.36 324.23,557.71 359.85,549.14 389.19,540.62 418.53,529.74 447.87,565.16 477.21,512.81 506.54,499.50 535.88,489.24 565.22,567.60 609.23,521.37 638.57,464.36 667.90,474.34 697.24,428.17 726.58,439.66 755.92,413.52 785.26,493.74 814.60,560.10 858.60,474.01 887.94,445.78 917.28,418.03 946.62,405.77 975.96,397.50 1005.29,390.17 1034.63,382.88 1063.97,373.65 1093.31,359.09 1122.65,342.44 1151.99,329.49 1181.32,321.77 1210.66,267.79 1240.00,248.84" fill="none" stroke="#f97316" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="1240.00" cy="248.84" r="4" fill="#f97316"/>
+<polyline points="100.00,637.22 132.48,629.71 161.82,623.73 191.16,631.02 227.83,634.91 257.17,631.78 293.84,602.76 324.23,595.99 359.85,589.24 389.19,589.24 418.53,583.53 447.87,583.53 477.21,577.36 513.88,571.14 543.22,565.28 572.56,556.37 601.89,545.67 631.23,532.86 660.57,522.73 689.91,514.54 719.25,508.30 748.58,501.93 777.92,492.27 807.26,496.28 836.60,477.03 866.99,395.00 902.61,370.72 931.95,347.54 961.29,347.54 990.62,347.54 1019.96,347.54 1049.30,339.45 1078.64,329.87 1107.98,319.24 1137.32,310.88 1166.65,285.42 1195.99,293.35 1225.33,241.08" fill="none" stroke="#2563eb" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="1225.33" cy="241.08" r="4" fill="#2563eb"/>
+<polyline points="100.00,637.22 132.48,630.55 161.82,625.01 191.16,636.77 220.50,637.41 257.17,689.87 286.51,641.40 315.85,613.59 346.23,605.59 382.90,597.31 418.53,589.23 447.87,590.53 477.21,558.27 506.54,559.96 543.22,528.15 572.56,519.64 601.89,500.60 631.23,472.87 660.57,430.12 689.91,422.07 719.25,432.89 748.58,425.52 777.92,467.40 821.93,538.05 866.99,463.81 909.94,397.07 939.28,380.98 969.67,373.17 1005.29,361.97 1034.63,354.39 1063.97,346.93 1093.31,337.04 1122.65,327.77 1151.99,320.60 1181.32,320.60 1210.66,311.17 1240.00,303.07" fill="none" stroke="#16a34a" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="1240.00" cy="303.07" r="4" fill="#16a34a"/>
+<polyline points="100.00,637.22 129.34,637.22 158.68,637.22 191.16,634.03 220.50,620.31 249.83,616.73 279.17,601.32 308.51,578.94 337.85,574.43 367.19,570.11 396.53,565.49 425.86,560.48 455.20,558.38 485.59,535.83 514.93,535.83 544.26,535.83 579.89,529.67 609.23,522.21 638.57,514.19 667.90,505.52 697.24,499.50 726.58,520.31 770.59,484.84 799.93,497.92 829.26,567.37 873.27,475.20 902.61,459.70 931.95,443.87 961.29,443.87 990.62,438.52 1019.96,438.52 1049.30,432.05 1078.64,424.81 1107.98,416.97 1137.32,402.93 1166.65,402.57 1195.99,421.57 1225.33,389.80" fill="none" stroke="#7c3aed" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="1225.33" cy="389.80" r="4" fill="#7c3aed"/>
+<polyline points="100.00,637.22 132.48,618.79 161.82,582.07 191.16,606.05 220.50,599.12 249.83,611.37 279.17,604.67 308.51,569.50 337.85,549.15 367.19,520.18 396.53,488.31 425.86,472.40 455.20,491.93 485.59,460.06 514.93,435.82 544.26,421.38 573.60,413.44 602.94,406.39 638.57,373.21 667.90,365.91 697.24,335.84 726.58,376.82 755.92,338.97 785.26,410.40 814.60,501.09 843.93,405.68 873.27,358.56 902.61,317.99 931.95,287.18 961.29,278.26 990.62,238.93 1019.96,231.74 1049.30,240.82 1078.64,216.52 1107.98,193.23 1137.32,195.19 1166.65,220.49 1195.99,251.70 1225.33,156.36" fill="none" stroke="#111827" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="8 6"/>
+<circle cx="1225.33" cy="156.36" r="4" fill="#111827"/>
+<line x1="1275" y1="103" x2="1307" y2="103" stroke="#dc2626" stroke-width="4" stroke-linecap="round"/>
+<text class="legend" x="1319" y="108">SOXX: $179,052 (22.3%)</text>
+<line x1="1275" y1="141" x2="1307" y2="141" stroke="#f97316" stroke-width="4" stroke-linecap="round"/>
+<text class="legend" x="1319" y="146">SMH: $157,302 (17.2%)</text>
+<line x1="1275" y1="179" x2="1307" y2="179" stroke="#2563eb" stroke-width="4" stroke-linecap="round"/>
+<text class="legend" x="1319" y="184">XLK: $158,448 (17.1%)</text>
+<line x1="1275" y1="217" x2="1307" y2="217" stroke="#16a34a" stroke-width="4" stroke-linecap="round"/>
+<text class="legend" x="1319" y="222">IWM: $149,302 (14.7%)</text>
+<line x1="1275" y1="255" x2="1307" y2="255" stroke="#7c3aed" stroke-width="4" stroke-linecap="round"/>
+<text class="legend" x="1319" y="260">QQQ: $136,506 (11.4%)</text>
+<line x1="1275" y1="293" x2="1307" y2="293" stroke="#111827" stroke-width="4" stroke-linecap="round"/>
+<text class="legend" x="1319" y="298">SPY Buy&amp;Hold: $170,947</text>
+<rect x="100" y="735" width="1110" height="50" fill="#f8fafc" stroke="#d8dee4" rx="8"/>
+<text class="note" x="118" y="758">Interpretation: SOXX leads on modeled return, while XLK is the balanced pick because its modeled drawdown is much lower than the semiconductor ETFs.</text>
+<text class="note" x="118" y="778">Proxy caveat: the option legs are model-priced from Yahoo ETF data, not historical OPRA option quotes.</text>
+</svg>

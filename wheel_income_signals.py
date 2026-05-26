@@ -1130,6 +1130,188 @@ class SyntheticProvider(MarketDataProvider):
         return self._priced_quote(quote, as_of)
 
 
+class YahooFinanceProxyProvider(HTTPProvider):
+    """Yahoo Finance underlying data plus model-priced historical option chains.
+
+    Yahoo's free chart endpoint is useful for ETF daily prices, but it does not
+    provide complete historical option chains. This provider therefore uses real
+    Yahoo underlying OHLCV and model prices the option chain from historical
+    volatility. Treat backtests from this provider as proxy research only.
+    """
+
+    name = "yahoo"
+
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
+        self.headers = {"User-Agent": "Mozilla/5.0"}
+        self._history_cache: dict[str, list[DailyBar]] = {}
+
+    @classmethod
+    def from_env(cls, cache_dir: Path) -> "YahooFinanceProxyProvider":
+        return cls(cache_dir=cache_dir)
+
+    @staticmethod
+    def _unix(value: dt.date) -> int:
+        return int(dt.datetime(value.year, value.month, value.day, tzinfo=dt.timezone.utc).timestamp())
+
+    def get_price_history(self, symbol: str, start: dt.date, end: dt.date) -> list[DailyBar]:
+        cached = self._history_cache.get(symbol)
+        if cached and cached[0].date <= start and cached[-1].date >= end:
+            return [bar for bar in cached if start <= bar.date <= end]
+
+        payload = self.request_json(
+            f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}",
+            {
+                "period1": self._unix(start),
+                "period2": self._unix(end + dt.timedelta(days=1)),
+                "interval": "1d",
+                "events": "history",
+                "includeAdjustedClose": "true",
+            },
+            headers=self.headers,
+            cache_seconds=86400,
+        )
+        chart = payload.get("chart", {})
+        error = chart.get("error")
+        if error:
+            raise DataProviderError(f"Yahoo chart error for {symbol}: {error}")
+        results = chart.get("result") or []
+        if not results:
+            raise DataProviderError(f"Yahoo returned no chart data for {symbol}.")
+        result = results[0]
+        timestamps = result.get("timestamp") or []
+        quote = (result.get("indicators", {}).get("quote") or [{}])[0]
+        bars = []
+        for idx, stamp in enumerate(timestamps):
+            close = safe_float((quote.get("close") or [None])[idx])
+            open_ = safe_float((quote.get("open") or [None])[idx])
+            high = safe_float((quote.get("high") or [None])[idx])
+            low = safe_float((quote.get("low") or [None])[idx])
+            if close is None or open_ is None or high is None or low is None:
+                continue
+            bars.append(
+                DailyBar(
+                    date=dt.datetime.fromtimestamp(stamp, tz=dt.timezone.utc).date(),
+                    open=open_,
+                    high=high,
+                    low=low,
+                    close=close,
+                    volume=safe_float((quote.get("volume") or [0])[idx], 0.0) or 0.0,
+                )
+            )
+        merged = {bar.date: bar for bar in self._history_cache.get(symbol, [])}
+        merged.update({bar.date: bar for bar in bars})
+        self._history_cache[symbol] = [merged[key] for key in sorted(merged)]
+        return [bar for bar in self._history_cache[symbol] if start <= bar.date <= end]
+
+    def get_underlying_price(self, symbol: str, as_of: Optional[dt.date] = None) -> float:
+        end = as_of or dt.date.today()
+        bars = self.get_price_history(symbol, end - dt.timedelta(days=14), end)
+        if not bars:
+            raise DataProviderError(f"No Yahoo price history for {symbol} as of {end}.")
+        return bars[-1].close
+
+    @staticmethod
+    def _fridays(start: dt.date, end: dt.date) -> list[dt.date]:
+        expirations = []
+        current = start
+        while current <= end:
+            if current.weekday() == 4:
+                expirations.append(current)
+            current += dt.timedelta(days=1)
+        return expirations or [end]
+
+    @staticmethod
+    def _strike_step(spot: float) -> float:
+        if spot >= 250:
+            return 5.0
+        if spot >= 100:
+            return 2.5
+        if spot >= 50:
+            return 1.0
+        return 0.5
+
+    def list_option_contracts(
+        self,
+        underlying: str,
+        expiration_gte: dt.date,
+        expiration_lte: dt.date,
+        option_type: str,
+        as_of: Optional[dt.date] = None,
+        strike_gte: Optional[float] = None,
+        strike_lte: Optional[float] = None,
+    ) -> list[OptionQuote]:
+        as_of = as_of or dt.date.today()
+        spot = self.get_underlying_price(underlying, as_of)
+        step = self._strike_step(spot)
+        low = strike_gte if strike_gte is not None else spot * (0.65 if option_type == "put" else 0.95)
+        high = strike_lte if strike_lte is not None else spot * (1.05 if option_type == "put" else 1.35)
+        strike = math.floor(low / step) * step
+        expirations = self._fridays(expiration_gte, expiration_lte)
+        quotes: list[OptionQuote] = []
+        while strike <= high + 1e-9:
+            rounded_strike = round(strike, 3)
+            for expiration in expirations:
+                quotes.append(
+                    OptionQuote(
+                        underlying=underlying,
+                        contract_symbol=occ_symbol(underlying, expiration, option_type, rounded_strike),
+                        option_type=option_type.lower(),
+                        expiration=expiration,
+                        strike=rounded_strike,
+                    )
+                )
+            strike += step
+        return quotes
+
+    def get_option_chain(
+        self,
+        underlying: str,
+        expiration_gte: dt.date,
+        expiration_lte: dt.date,
+        option_type: str,
+    ) -> list[OptionQuote]:
+        as_of = dt.date.today()
+        quotes = self.list_option_contracts(
+            underlying, expiration_gte, expiration_lte, option_type, as_of=as_of
+        )
+        return [q for q in (self.get_option_eod(quote, as_of) for quote in quotes) if q is not None]
+
+    def get_option_eod(self, quote: OptionQuote, as_of: dt.date) -> Optional[OptionQuote]:
+        if as_of > quote.expiration:
+            return None
+        spot = self.get_underlying_price(quote.underlying, as_of)
+        history = self.get_price_history(quote.underlying, as_of - dt.timedelta(days=140), as_of)
+        hv = realized_volatility(history, as_of, 63)
+        if hv is None:
+            hv = 0.25
+        # Use a mild IV premium over realized volatility to model option-selling VRP.
+        iv = min(max(hv * 1.15, 0.12), 1.25)
+        t = year_fraction(as_of, quote.expiration)
+        mid = black_scholes_price(
+            quote.option_type,
+            spot,
+            quote.strike,
+            0.04,
+            iv,
+            t,
+        )
+        if mid <= 0:
+            return None
+        spread = max(mid * 0.03, 0.02)
+        bid = max(mid - spread / 2.0, 0.01)
+        ask = mid + spread / 2.0
+        priced = dataclasses.replace(
+            quote,
+            bid=round(bid, 4),
+            ask=round(ask, 4),
+            close=round(mid, 4),
+            iv=iv,
+            timestamp=as_of.isoformat(),
+        )
+        return priced.enrich_greeks(spot, as_of, 0.04, fallback_vol=iv)
+
+
 class StrategyEngine:
     def __init__(self, config: StrategyConfig) -> None:
         self.config = config
@@ -1330,6 +1512,8 @@ def provider_from_args(args: argparse.Namespace) -> MarketDataProvider:
         return ThetaDataProvider.from_env(cache_dir)
     if args.provider == "alpaca":
         return AlpacaProvider.from_env(cache_dir)
+    if args.provider == "yahoo":
+        return YahooFinanceProxyProvider.from_env(cache_dir)
     if args.provider == "synthetic":
         return SyntheticProvider()
     raise ValueError(args.provider)
@@ -1532,7 +1716,12 @@ def run_backtest(args: argparse.Namespace) -> int:
                     expiry_bar = close_on_or_before(test_bars, q.expiration)
                     if expiry_bar is None or expiry_bar.date <= current_date:
                         break
-                    premium_cash = (q.mid or 0.0) * CONTRACT_SIZE - cfg.contract_fee
+                    collateral_per_contract = q.strike * CONTRACT_SIZE
+                    contracts = int(cash // collateral_per_contract)
+                    if contracts < 1:
+                        current_date += dt.timedelta(days=28)
+                        continue
+                    premium_cash = ((q.mid or 0.0) * CONTRACT_SIZE - cfg.contract_fee) * contracts
                     cash += premium_cash
                     month_key = (symbol, current_date.strftime("%Y-%m"))
                     monthly_income[month_key] = monthly_income.get(month_key, 0.0) + premium_cash
@@ -1540,10 +1729,10 @@ def run_backtest(args: argparse.Namespace) -> int:
                     trade_pnl = premium_cash
                     if assigned:
                         assignments += 1
-                        cash -= q.strike * CONTRACT_SIZE
-                        shares = CONTRACT_SIZE
-                        cost_basis = q.strike - premium_cash / CONTRACT_SIZE
-                        trade_pnl = premium_cash + (expiry_bar.close - q.strike) * CONTRACT_SIZE
+                        cash -= collateral_per_contract * contracts
+                        shares = CONTRACT_SIZE * contracts
+                        cost_basis = q.strike - premium_cash / shares
+                        trade_pnl = premium_cash + (expiry_bar.close - q.strike) * shares
                     else:
                         wins += 1
                         closed_cycles += 1
@@ -1551,6 +1740,7 @@ def run_backtest(args: argparse.Namespace) -> int:
                         {
                             "symbol": symbol,
                             "phase": "CSP",
+                            "contracts": contracts,
                             "entry_date": current_date.isoformat(),
                             "expiration": q.expiration.isoformat(),
                             "contract_symbol": q.contract_symbol,
@@ -1586,17 +1776,21 @@ def run_backtest(args: argparse.Namespace) -> int:
                     expiry_bar = close_on_or_before(test_bars, q.expiration)
                     if expiry_bar is None or expiry_bar.date <= current_date:
                         break
-                    premium_cash = (q.mid or 0.0) * CONTRACT_SIZE - cfg.contract_fee
+                    contracts = shares // CONTRACT_SIZE
+                    if contracts < 1:
+                        current_date += dt.timedelta(days=28)
+                        continue
+                    premium_cash = ((q.mid or 0.0) * CONTRACT_SIZE - cfg.contract_fee) * contracts
                     cash += premium_cash
                     month_key = (symbol, current_date.strftime("%Y-%m"))
                     monthly_income[month_key] = monthly_income.get(month_key, 0.0) + premium_cash
                     prior_cost_basis = cost_basis
-                    cost_basis = cost_basis - premium_cash / CONTRACT_SIZE
+                    cost_basis = cost_basis - premium_cash / shares
                     called = expiry_bar.close > q.strike
                     trade_pnl = premium_cash
                     if called:
-                        cash += q.strike * CONTRACT_SIZE
-                        trade_pnl = premium_cash + (q.strike - prior_cost_basis) * CONTRACT_SIZE
+                        cash += q.strike * shares
+                        trade_pnl = premium_cash + (q.strike - prior_cost_basis) * shares
                         shares = 0
                         cost_basis = None
                         wins += 1 if trade_pnl > 0 else 0
@@ -1607,6 +1801,7 @@ def run_backtest(args: argparse.Namespace) -> int:
                         {
                             "symbol": symbol,
                             "phase": "CC",
+                            "contracts": contracts,
                             "entry_date": current_date.isoformat(),
                             "expiration": q.expiration.isoformat(),
                             "contract_symbol": q.contract_symbol,
@@ -1625,6 +1820,7 @@ def run_backtest(args: argparse.Namespace) -> int:
                     {
                         "symbol": symbol,
                         "phase": "ERROR",
+                        "contracts": "",
                         "entry_date": current_date.isoformat(),
                         "expiration": "",
                         "contract_symbol": "",
@@ -1776,7 +1972,11 @@ def run_universe(args: argparse.Namespace) -> int:
 
 
 def add_common_args(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument("--provider", choices=["polygon", "theta", "alpaca", "synthetic"], default="polygon")
+    parser.add_argument(
+        "--provider",
+        choices=["polygon", "theta", "alpaca", "yahoo", "synthetic"],
+        default="polygon",
+    )
     parser.add_argument("--symbols", help="Comma-separated symbols. Defaults to core ETF universe.")
     parser.add_argument("--include-leveraged", action="store_true", help="Include TQQQ/SOXL high-risk watchlist.")
     parser.add_argument("--out-dir", default="results")

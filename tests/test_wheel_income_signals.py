@@ -159,7 +159,34 @@ class WheelIncomeSignalTests(unittest.TestCase):
             self.assertEqual(rc, 0)
             self.assertTrue(Path(tmp, "signals.csv").exists())
 
+    def test_yahoo_proxy_prices_model_option_from_history(self):
+        provider = wis.YahooFinanceProxyProvider()
+        as_of = dt.date(2026, 5, 26)
+        quote = wis.OptionQuote(
+            underlying="SPY",
+            contract_symbol=wis.occ_symbol("SPY", dt.date(2026, 6, 26), "put", 600),
+            option_type="put",
+            expiration=dt.date(2026, 6, 26),
+            strike=600,
+        )
+
+        def fake_history(symbol, start, end):
+            bars = []
+            current = start
+            while current <= end:
+                if current.weekday() < 5:
+                    day = (current - start).days
+                    close = 620 + day * 0.05
+                    bars.append(wis.DailyBar(current, close, close + 1, close - 1, close, 1000000))
+                current += dt.timedelta(days=1)
+            return bars
+
+        provider.get_price_history = fake_history
+        priced = provider.get_option_eod(quote, as_of)
+        self.assertIsNotNone(priced)
+        self.assertGreater(priced.mid, 0)
+        self.assertLess(priced.delta, 0)
+
 
 if __name__ == "__main__":
     unittest.main()
-

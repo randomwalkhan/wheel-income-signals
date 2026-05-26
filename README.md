@@ -30,6 +30,7 @@ Primary historical backtests should use a provider with historical option chains
 - Polygon / Massive via `POLYGON_API_KEY`
 - ThetaData via `THETADATA_BASE_URL`
 - Alpaca can be used for current signal snapshots, but it is not the default long-history backtest source.
+- Yahoo Finance via `--provider yahoo` uses real ETF daily prices but model-prices historical options from realized volatility. Use it only as a proxy when full historical option chains are unavailable.
 
 References:
 
@@ -88,6 +89,18 @@ python3 wheel_income_signals.py backtest \
   --out-dir results/backtest
 ```
 
+Yahoo Finance proxy backtest:
+
+```bash
+python3 wheel_income_signals.py backtest \
+  --provider yahoo \
+  --symbols SPY,QQQ,IWM,DIA,XLK,XLF,XLE,XLV,XLP,XLU,XLI,XLY,SMH,SOXX,TLT,GLD \
+  --start 2023-05-26 \
+  --end 2026-05-22 \
+  --capital 100000 \
+  --out-dir reports/yahoo_proxy_3y
+```
+
 Run tests:
 
 ```bash
@@ -108,11 +121,12 @@ Backtests write:
 - `summary.md`
 
 Metrics include CAGR, max drawdown, Sharpe, Sortino, assignment rate, covered-call recovery cycles, win rate, and buy-and-hold comparison.
+Backtests size CSP entries by the maximum whole number of cash-secured contracts affordable with available cash; CC entries cover all assigned 100-share lots.
 
 ## Important Limitations
 
 - Historical option data quality matters. Sparse chains, stale quotes, and missing open interest can materially distort results.
+- Yahoo Finance proxy results are not true historical option-chain backtests; they use Yahoo ETF OHLCV plus Black-Scholes/HV model prices.
 - Leveraged ETFs such as `TQQQ` and `SOXL` are path-dependent daily reset products. They are reported as high-risk even when premium yield looks attractive.
 - Option assignment is modeled at expiration based on closing price. Early assignment and dividends are not modeled by default.
 - Taxes, broker-specific margin rules, hard-to-borrow effects, and user-specific suitability are outside the script.
-
